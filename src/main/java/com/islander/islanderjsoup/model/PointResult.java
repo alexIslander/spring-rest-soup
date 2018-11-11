@@ -1,5 +1,6 @@
 package com.islander.islanderjsoup.model;
 
+import java.util.List;
 import java.util.Objects;
 
 public class PointResult {
@@ -9,6 +10,11 @@ public class PointResult {
     public PointResult(Integer playerOnePoints, Integer playerTwoPoints) {
         this.playerOnePoints = playerOnePoints;
         this.playerTwoPoints = playerTwoPoints;
+    }
+
+    public PointResult(List<Integer> points) {
+        this.playerOnePoints = points.get(0);
+        this.playerTwoPoints = points.get(1);
     }
 
     public Integer getPlayerOnePoints() {

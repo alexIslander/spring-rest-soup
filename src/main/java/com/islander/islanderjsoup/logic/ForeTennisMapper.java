@@ -1,5 +1,6 @@
 package com.islander.islanderjsoup.logic;
 
+import com.islander.islanderjsoup.common.IslanderUtils;
 import com.islander.islanderjsoup.model.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -17,8 +18,13 @@ import java.util.stream.Collectors;
 @Service
 public class ForeTennisMapper {
 
+    public static final String RETIRED = "Ret";
     DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final IslanderUtils utils;
 
+    public ForeTennisMapper(final IslanderUtils utils) {
+        this.utils = utils;
+    }
 
     public Tournament createTournament(Document document) {
         return mapTournament(document);
@@ -49,7 +55,8 @@ public class ForeTennisMapper {
                     System.out.println(cols.text());
                     Game game = new Game();
                     game.setRound(cols.get(0).getAllElements().first().getElementsByClass("largeOnly").text());
-                    Elements names = cols.get(1).getAllElements().first().getElementsByTag("a").get(0).getElementsByTag("span");
+                    Elements names = cols.get(1).getAllElements().first().getElementsByTag("a")
+                            .get(0).getElementsByTag("span");
                     game.setFirstPlayer(new Player(names.get(0).text()));
                     game.setSecondPlayer(new Player(names.get(2).text()));
 
@@ -57,7 +64,14 @@ public class ForeTennisMapper {
                     game.setGamePoints(createGamePoints(cols.get(7)));
 
                     Prediction prediction = new Prediction();
-                    prediction.setTowin("1".equals(cols.get(4).text()) ? game.getFirstPlayer() : game.getSecondPlayer());
+                    prediction.setTowin(isPlayerOne(cols) ? game.getFirstPlayer() : game.getSecondPlayer());
+                    if (cols.get(2).hasText()) {
+                        prediction.setP1Probability(Integer.valueOf(cols.get(2).text()));
+                    }
+                    if (cols.get(3).hasText()) {
+                        prediction.setP2Probability(Integer.valueOf(cols.get(3).text()));
+                    }
+
                     if (cols.get(6).hasText()) {
                         prediction.setOdds(Double.valueOf(cols.get(6).text()));
                     }
@@ -65,8 +79,8 @@ public class ForeTennisMapper {
                         prediction.setSetPrediction(createResult(cols.get(5)));
                     }
 
-                    if (cols.get(8).hasText() && !"Ret".equals(cols.get(8).text())) {
-                        List<Integer> p =  stringToIntList(cols.get(8).text());
+                    if (cols.get(8).hasText() && !RETIRED.equals(cols.get(8).text())) {
+                        List<Integer> p =  utils.stringToIntList(cols.get(8).text());
                         game.setOutcome(new PointResult(p.get(0) , p.get(1)));
                     }
 
@@ -88,6 +102,10 @@ public class ForeTennisMapper {
         return games;
     }
 
+    private boolean isPlayerOne(Elements cols) {
+        return "1".equals(cols.get(4).text());
+    }
+
     private boolean isPredictionCorrect(Elements cols, Game game, Prediction prediction) {
         boolean p1Won = game.getOutcome().getPlayerOnePoints().compareTo(
                 game.getOutcome().getPlayerTwoPoints()) > 0;
@@ -96,27 +114,20 @@ public class ForeTennisMapper {
         boolean p1Pr = prediction.getSetPrediction().getPlayerOnePoints().compareTo(
                 prediction.getSetPrediction().getPlayerTwoPoints()) > 0;
         boolean p2Pr = !p1Pr;
-        return ("1".equals(cols.get(4).text()) && p1Won && p1Pr) ||
-                ("2".equals(cols.get(4).text()) && p2Won && p2Pr);
+        return (isPlayerOne(cols) && p1Won && p1Pr) || (!isPlayerOne(cols) && p2Won && p2Pr);
     }
 
     private List<PointResult> createGamePoints(Element element) {
         List<PointResult> result = new ArrayList<>();
         Elements pointsContainer = element.getAllElements().first().getElementsByTag("div");
         if (pointsContainer.hasText()) {
-            List<Integer> p1Points = stringToIntList(pointsContainer.get(0).text());
-            List<Integer> p2Points = stringToIntList(pointsContainer.get(1).text());
+            List<Integer> p1Points = utils.stringToIntList(pointsContainer.get(0).text());
+            List<Integer> p2Points = utils.stringToIntList(pointsContainer.get(1).text());
             for (int i = 0; i < p1Points.size(); i++) {
                 result.add(new PointResult(p1Points.get(i), p2Points.get(i)));
             }
         }
         return result;
-    }
-
-    private List<Integer> stringToIntList(String input) {
-        return Arrays.stream(input.split("\\s"))
-                .map(Integer::parseInt)
-                .collect(Collectors.toList());
     }
 
     private PointResult createResult(Element col) {

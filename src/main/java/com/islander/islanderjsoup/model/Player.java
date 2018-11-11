@@ -1,9 +1,12 @@
 package com.islander.islanderjsoup.model;
 
+import com.islander.islanderjsoup.model.enumtype.PlayerType;
+
 public class Player {
     String name;
     Integer atpRank;
     String url;
+    PlayerType type;
 
     public Player(String name) {
         this.name = name;
@@ -31,5 +34,13 @@ public class Player {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public PlayerType getType() {
+        return type;
+    }
+
+    public void setType(PlayerType type) {
+        this.type = type;
     }
 }
