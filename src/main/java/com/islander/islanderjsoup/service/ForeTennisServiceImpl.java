@@ -1,9 +1,12 @@
 package com.islander.islanderjsoup.service;
 
 import com.islander.islanderjsoup.logic.ForeTennisMapper;
+import com.islander.islanderjsoup.model.ForeTennisSettings;
 import com.islander.islanderjsoup.model.Tournament;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class ForeTennisServiceImpl implements ForeTennisService{
@@ -23,4 +26,15 @@ public class ForeTennisServiceImpl implements ForeTennisService{
         tournament.setStatistic(statisticsService.calculateStatistics(tournament.getGames()));
         return tournament;
     }
+
+    @Override
+    public ForeTennisSettings createSettings(Document document) {
+        return foreTennisMapper.createForeTennisSettings(document);
+    }
+
+    @Override
+    public Map<String, String> getTournamentNames(Document document) {
+        return foreTennisMapper.createTournamentNames(document);
+    }
+
 }

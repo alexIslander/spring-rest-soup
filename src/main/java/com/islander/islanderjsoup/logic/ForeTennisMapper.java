@@ -2,6 +2,9 @@ package com.islander.islanderjsoup.logic;
 
 import com.islander.islanderjsoup.common.IslanderUtils;
 import com.islander.islanderjsoup.model.*;
+import com.islander.islanderjsoup.model.enumtype.CourtTye;
+import com.islander.islanderjsoup.model.enumtype.SurfaceType;
+import com.islander.islanderjsoup.model.enumtype.TennisCategoryType;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -10,9 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -135,4 +136,48 @@ public class ForeTennisMapper {
         return new PointResult(Integer.valueOf(divs.get(0).text()), Integer.valueOf(divs.get(1).text()));
     }
 
+    public ForeTennisSettings createForeTennisSettings(Document document) {
+        List<Integer> years = new ArrayList<>();
+        for (int i = 1968; i < LocalDateTime.now().getYear() + 1; i++) {
+            years.add(i);
+        }
+        List<String> types = new ArrayList<>();
+        Arrays.asList(TennisCategoryType.values()).forEach(c -> types.add(c.getValue()));
+
+        Map<String, String> names = createTournamentNames(document);
+
+        List<String> surfaces = new ArrayList<>();
+        Arrays.asList(SurfaceType.values()).forEach(c -> surfaces.add(c.getValue()));
+
+        List<String> courts = new ArrayList<>();
+        Arrays.asList(CourtTye.values()).forEach(c -> courts.add(c.getValue()));
+
+        return new ForeTennisSettings(years, names, types, surfaces, courts);
+    }
+
+    public Map<String, String> createTournamentNames(Document document) {
+        Elements h2Element = document.getElementsByClass("preds");
+        return mapRowsToTournamentNames(h2Element.select("tr"));
+    }
+
+    private Map<String, String> mapRowsToTournamentNames(Elements rows) {
+        Map<String, String> names = new HashMap<>();
+        try {
+            for (int i = 1; i < rows.size(); i++) { //first row is the col names so skip it.
+                Element row = rows.get(i);
+                Elements cols = row.select("td");
+
+                if (cols.size() == 5) {
+                    String tournamentName = cols.get(0).text();
+                    String link = cols.get(0).getAllElements().get(0).getElementsByTag("a")
+                            .get(0).attr("href");
+                    String tournamentLinkParam = link.split("/")[5];
+                    names.put(tournamentName, tournamentLinkParam);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return names;
+    }
 }

@@ -6,6 +6,7 @@ import java.util.List;
 
 public class Tournament {
     String name;
+    Attirbutes attirbutes;
     LocalDate year;
     List<Game> games = new ArrayList<>();
     Statistic statistic;

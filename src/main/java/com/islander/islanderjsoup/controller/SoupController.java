@@ -1,5 +1,6 @@
 package com.islander.islanderjsoup.controller;
 
+import com.islander.islanderjsoup.model.ForeTennisSettings;
 import com.islander.islanderjsoup.model.Tournament;
 import com.islander.islanderjsoup.service.EvenOddService;
 import com.islander.islanderjsoup.service.ForeTennisService;
@@ -16,8 +17,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import javax.ws.rs.QueryParam;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class SoupController {
@@ -49,6 +53,60 @@ public class SoupController {
         return h2Element.text();
     }
 
+    @GetMapping("/settings")
+    public ForeTennisSettings tennisSettings() {
+        String urlFull = BASE_URL.concat("/").concat("tournaments").concat("/").concat("atp")
+                .concat("/").concat(String.valueOf(LocalDateTime.now().getYear()));
+        ForeTennisSettings settings = null;
+
+        try {
+            Document doc = Jsoup.connect(urlFull).get();
+            settings = foreTennisService.createSettings(doc);
+        } catch (Exception e) {
+            System.out.println(e.getStackTrace());
+        }
+
+        return settings;
+    }
+
+    @GetMapping("/settings/tournamentNames")
+    public Map<String, String> tennisNames(@QueryParam("year") final String year) {
+        String urlFull = BASE_URL.concat("/").concat("tournaments").concat("/").concat("atp")
+                .concat("/").concat(year);
+        Map<String, String> settings = null;
+
+        try {
+            Document doc = Jsoup.connect(urlFull).get();
+            settings = foreTennisService.getTournamentNames(doc);
+        } catch (Exception e) {
+            System.out.println(e.getStackTrace());
+        }
+
+        return settings;
+    }
+
+
+    @GetMapping("/tournamentSettings/{atp_wta}/{year}")
+    public List<Tournament> tennisSettings(@QueryParam("atp_wta") final String atp_wta,
+                                                    @QueryParam("year") final String year) {
+        String urlFull = BASE_URL;
+        if (!StringUtil.isBlank(atp_wta) && !StringUtil.isBlank(year)) {
+            urlFull = urlFull.concat(atp_wta).concat("/").concat(year);
+        }
+
+        Map<String, List<String>> tennisSettings = new HashMap<>();
+        List<Tournament> tournaments = null;
+        try {
+            Document doc = Jsoup.connect(urlFull).get();
+            // TODO
+//            tournament = foreTennisService.createTournament(doc);
+        } catch (Exception e) {
+            System.out.println(e.getStackTrace());
+        }
+
+        return tournaments;
+    }
+
     @GetMapping("/tennis")
     public Tournament tennis(@QueryParam("url") final String url) {
         String urlFull = BASE_URL;
@@ -66,6 +124,26 @@ public class SoupController {
             System.out.println(e.getStackTrace());
         }
 
+        return tournament;
+    }
+
+    @GetMapping("/tennisStat")
+    public Tournament tennisStat(@QueryParam("url") final String url) {
+        String urlFull = BASE_URL;
+        if (!StringUtil.isBlank(url)) {
+            urlFull = urlFull.concat(url);
+        }
+        Elements h2Element = null;
+        List<String> result = new ArrayList<>();
+        Tournament tournament = null;
+        try {
+            Document doc = Jsoup.connect(urlFull).get();
+
+            tournament = foreTennisService.createTournament(doc);
+        } catch (Exception e) {
+            System.out.println(e.getStackTrace());
+        }
+        tournament.setGames(null);
         return tournament;
     }
 
