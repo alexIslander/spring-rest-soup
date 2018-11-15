@@ -5,6 +5,8 @@ import com.islander.islanderjsoup.model.Tournament;
 import com.islander.islanderjsoup.service.EvenOddService;
 import com.islander.islanderjsoup.service.ForeTennisService;
 import org.jsoup.helper.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +28,8 @@ import java.util.Map;
 @RestController
 public class SoupController {
 
+    final static Logger LOGGER = LoggerFactory.getLogger(SoupController.class);
+
     public static final String BASE_URL = "https://www.foretennis.com";
 
     private final EvenOddService evenOddService;
@@ -41,6 +45,7 @@ public class SoupController {
     @GetMapping("/soup")
     public String soup() {
         String url = "https://www.openml.org/t/31";
+        LOGGER.info("Called soup() with url {}.", url);
         Elements h2Element = null;
         try {
             Document doc = Jsoup.connect(url).get();
@@ -48,7 +53,7 @@ public class SoupController {
             h2Element = parentElement.child(1).select("h2");
             System.out.println(h2Element.text());
         } catch (Exception e) {
-
+            LOGGER.error(e.getMessage(), e);
         }
         return h2Element.text();
     }
@@ -63,7 +68,7 @@ public class SoupController {
             Document doc = Jsoup.connect(urlFull).get();
             settings = foreTennisService.createSettings(doc);
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
+            LOGGER.error(e.getMessage(), e);
         }
 
         return settings;
@@ -79,7 +84,7 @@ public class SoupController {
             Document doc = Jsoup.connect(urlFull).get();
             settings = foreTennisService.getTournamentNames(doc);
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
+            LOGGER.error(e.getMessage(), e);
         }
 
         return settings;
@@ -101,7 +106,7 @@ public class SoupController {
             // TODO
 //            tournament = foreTennisService.createTournament(doc);
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
+            LOGGER.error(e.getMessage(), e);
         }
 
         return tournaments;
@@ -121,7 +126,7 @@ public class SoupController {
 
             tournament = foreTennisService.createTournament(doc);
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
+            LOGGER.error(e.getMessage(), e);
         }
 
         return tournament;
@@ -141,7 +146,7 @@ public class SoupController {
 
             tournament = foreTennisService.createTournament(doc);
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
+            LOGGER.error(e.getMessage(), e);
         }
         tournament.setGames(null);
         return tournament;
@@ -160,7 +165,7 @@ public class SoupController {
             html = Jsoup.connect(urlFull).get().html();
 
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
+            LOGGER.error(e.getMessage(), e);
         }
         return html.toString();
     }
